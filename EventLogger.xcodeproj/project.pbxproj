@@ -10,6 +10,8 @@
 		8DE48E071AD71A3E00413AC4 /* EventLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8DE48E061AD71A3E00413AC4 /* EventLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8DE48E0D1AD71A3E00413AC4 /* EventLogger.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DE48E011AD71A3E00413AC4 /* EventLogger.framework */; };
 		8DE48E141AD71A3E00413AC4 /* EventLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE48E131AD71A3E00413AC4 /* EventLoggerTests.swift */; };
+		8DE48E1E1AD71A9A00413AC4 /* EventLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE48E1D1AD71A9A00413AC4 /* EventLogger.swift */; };
+		8DE48E1F1AD71A9A00413AC4 /* EventLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE48E1D1AD71A9A00413AC4 /* EventLogger.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +31,7 @@
 		8DE48E0C1AD71A3E00413AC4 /* EventLoggerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EventLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DE48E121AD71A3E00413AC4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DE48E131AD71A3E00413AC4 /* EventLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLoggerTests.swift; sourceTree = "<group>"; };
+		8DE48E1D1AD71A9A00413AC4 /* EventLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventLogger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				8DE48E061AD71A3E00413AC4 /* EventLogger.h */,
+				8DE48E1D1AD71A9A00413AC4 /* EventLogger.swift */,
 				8DE48E041AD71A3E00413AC4 /* Supporting Files */,
 			);
 			path = EventLogger;
@@ -209,6 +213,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8DE48E1E1AD71A9A00413AC4 /* EventLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +221,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8DE48E1F1AD71A9A00413AC4 /* EventLogger.swift in Sources */,
 				8DE48E141AD71A3E00413AC4 /* EventLoggerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -323,6 +329,7 @@
 		8DE48E181AD71A3E00413AC4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -332,12 +339,14 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		8DE48E191AD71A3E00413AC4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
