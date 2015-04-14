@@ -15,7 +15,7 @@ struct EventLogger {
     }
 
     struct Event {
-        let description: String
+        let message: String
         var type: EventType?
         let time = NSDate()
 
@@ -25,7 +25,7 @@ struct EventLogger {
 
         func dictionaryValue() -> [String : String] {
             return [
-                "message" : description,
+                "message" : message,
                 "type" : type?.rawValue ?? "",
                 "time" : time.description,
             ]
@@ -39,7 +39,7 @@ struct EventLogger {
                 noticeType = ""
             }
 
-            return "\(noticeType)\(description)"
+            return "\(noticeType)\(message)"
         }
     }
 
@@ -51,8 +51,8 @@ struct EventLogger {
         self.name = name
     }
 
-    mutating func addEvent(description: String, type: EventType = .Expected) {
-        let event = Event(description: description, type: type)
+    mutating func addEvent(message: String, type: EventType = .Expected) {
+        let event = Event(message: message, type: type)
         events.append(event)
     }
 
