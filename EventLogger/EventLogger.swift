@@ -27,7 +27,7 @@ struct EventLogger {
             return [
                 "message" : message,
                 "type" : type?.rawValue ?? "",
-                "time" : time.description,
+                "time" : EventLogger.JSONTimeFormatter.stringFromDate(time),
             ]
         }
 
@@ -46,6 +46,12 @@ struct EventLogger {
     var name: String
     var events = [Event]()
     let creationTime = NSDate()
+
+    static var JSONTimeFormatter: NSDateFormatter {
+        let formatter = NSDateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
+        return formatter
+    }
 
     init (name: String) {
         self.name = name
