@@ -86,7 +86,7 @@ struct EventLogger {
         let seconds = totalSeconds % 60
         let minutes = (totalSeconds / 60) % 60
         let hours = totalSeconds / (60 * 60)
-        let subSeconds = (round(remainder * 100) / 100) * 100
+        let subSeconds = (round(remainder * 100 + 0.001) / 100) * 100
         let string = String(format: "%1d:%02d:%02d.%02d", Int(hours), Int(minutes), Int(seconds), Int(subSeconds))
 
         var startIndex = string.startIndex

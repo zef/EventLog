@@ -61,8 +61,8 @@ class EventLoggerTests: XCTestCase {
         let hour = minute * 60
         XCTAssertEqual(EventLogger.formatTime(1), "1.00")
         XCTAssertEqual(EventLogger.formatTime(1.01), "1.01")
-        XCTAssertEqual(EventLogger.formatTime(1.015), "1.01")
-        XCTAssertEqual(EventLogger.formatTime(1.0151), "1.02")
+        XCTAssertEqual(EventLogger.formatTime(1.014), "1.01")
+        XCTAssertEqual(EventLogger.formatTime(1.015), "1.02")
         XCTAssertEqual(EventLogger.formatTime(minute + 1.01), "1:01.01")
         XCTAssertEqual(EventLogger.formatTime(hour + minute + 1), "1:01:01.00")
         XCTAssertEqual(EventLogger.formatTime(24 * hour + minute + 1), "24:01:01.00")
