@@ -39,7 +39,9 @@ class EventLogTests: XCTestCase {
             self.performAfter(1, completion: { () -> () in
                 self.log.addEvent("A bad thing happened", type: .Error)
 
-                XCTAssert(self.log.events.first?.type == nil)
+                if let type = self.log.events.first?.type {
+                    XCTAssertEqual(type, EventLog.EventType.BlankType)
+                }
 
                 if let type = self.log.events.last?.type {
                     XCTAssertEqual(type, EventLog.EventType.Error)

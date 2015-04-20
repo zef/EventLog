@@ -7,13 +7,28 @@
 
 import Foundation
 
-struct EventLog {
+// would rather use a struct... but going class for @objc compatibility.
+// I thought of wrapping up the compatibility stuff in its own class
+// that references the struct, but think that's overkill for now...
+@objc class EventLog {
 
-    enum EventType: String {
-        case UserInteraction = "User Interaction"
-        case Checkpoint = "Checkpoint"
-        case Success = "Success"
-        case Error = "Error"
+    @objc enum EventType: Int {
+        case BlankType, UserInteraction, Checkpoint, Success, Error
+
+        func stringValue() -> String? {
+            switch self {
+            case BlankType:
+                return nil
+            case UserInteraction:
+                return "User Interaction"
+            case Checkpoint:
+                return "Checkpoint"
+            case Success:
+                return "Success"
+            case Error:
+                return "Error"
+            }
+        }
     }
 
     struct Event {
@@ -28,15 +43,15 @@ struct EventLog {
         func dictionaryValue() -> [String : String] {
             return [
                 "message" : message,
-                "type" : type?.rawValue ?? "",
+                "type" : type?.stringValue() ?? "",
                 "time" : EventLog.JSONTimeFormatter.stringFromDate(time),
             ]
         }
 
         func stringValue() -> String {
             let noticeType: String
-            if let typeValue = type?.rawValue {
-                noticeType = typeValue.isEmpty ? "" : "[\(typeValue)] "
+            if let typeValue = type?.stringValue() {
+                noticeType = "[\(typeValue)] "
             } else {
                 noticeType = ""
             }
@@ -59,7 +74,7 @@ struct EventLog {
         self.name = name
     }
 
-    mutating func addEvent(message: String, type: EventType? = nil) {
+    @objc func addEvent(message: String, type: EventType = .BlankType) {
         let event = Event(message: message, type: type)
         events.append(event)
     }
@@ -107,5 +122,4 @@ struct EventLog {
 
         return string.substringFromIndex(indexOfDesiredChar!)
     }
-
 }
