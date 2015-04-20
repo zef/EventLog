@@ -39,14 +39,17 @@ class EventLoggerTests: XCTestCase {
             self.performAfter(1, completion: { () -> () in
                 self.logger.addEvent("A bad thing happened", type: .Error)
 
-                if let type = self.logger.events.first?.type {
-                    XCTAssertEqual(type, EventLogger.EventType.Expected)
-                }
+                XCTAssert(self.logger.events.first?.type == nil)
+
                 if let type = self.logger.events.last?.type {
                     XCTAssertEqual(type, EventLogger.EventType.Error)
                 }
 
+                println("-------------")
                 println(self.logger.stringValue())
+                println("-------------")
+                println(self.logger.jsonValue())
+                println("-------------")
                 expectaiton.fulfill()
             })
         })

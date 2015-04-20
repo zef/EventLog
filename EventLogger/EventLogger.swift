@@ -10,8 +10,10 @@ import Foundation
 struct EventLogger {
 
     enum EventType: String {
-        case Expected = ""
-        case Error = "error"
+        case UserInteraction = "User Interaction"
+        case Checkpoint = "Checkpoint"
+        case Success = "Success"
+        case Error = "Error"
     }
 
     struct Event {
@@ -57,7 +59,7 @@ struct EventLogger {
         self.name = name
     }
 
-    mutating func addEvent(message: String, type: EventType = .Expected) {
+    mutating func addEvent(message: String, type: EventType? = nil) {
         let event = Event(message: message, type: type)
         events.append(event)
     }
