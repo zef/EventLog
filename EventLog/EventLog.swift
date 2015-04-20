@@ -63,6 +63,7 @@ import Foundation
     var name: String
     var events = [Event]()
     let creationTime = NSDate()
+    var loggingEnabled = false
 
     static var JSONTimeFormatter: NSDateFormatter {
         let formatter = NSDateFormatter()
@@ -77,11 +78,22 @@ import Foundation
     @objc func addEvent(message: String, type: EventType = .BlankType) {
         let event = Event(message: message, type: type)
         events.append(event)
+        logEventAdded(event)
+    }
+
+    func logEventAdded(event: Event) {
+        if loggingEnabled {
+            println("\(name): \(offsetFor(event)): \(event.stringValue())")
+        }
+    }
+
+    func offsetFor(event: Event) -> String {
+        return EventLog.formatTime(event.offsetSince(self.creationTime))
     }
 
     func stringValue() -> String {
         let strings = events.map { event -> String in
-            let time = EventLog.formatTime(event.offsetSince(self.creationTime))
+            let time = self.offsetFor(event)
             return "\(time): \(event.stringValue())"
         }
         return join("\n", strings)
@@ -90,7 +102,7 @@ import Foundation
     func jsonValue() -> String {
         let eventList = events.map { event -> [String : String] in
             var dict = event.dictionaryValue()
-            dict["offset"] = EventLog.formatTime(event.offsetSince(self.creationTime))
+            dict["offset"] = self.offsetFor(event)
             return dict
         }
 
