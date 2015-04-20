@@ -1,6 +1,6 @@
 //
-//  EventLoggerTests.swift
-//  EventLoggerTests
+//  EventLogTests.swift
+//  EventLogTests
 //
 //  Created by Zef Houssney on 4/9/15.
 //  Copyright (c) 2015 Made by Kiwi. All rights reserved.
@@ -9,22 +9,22 @@
 import UIKit
 import XCTest
 
-class EventLoggerTests: XCTestCase {
+class EventLogTests: XCTestCase {
 
-    var logger = EventLogger(name: "Main")
+    var log = EventLog(name: "Main")
 
     override func setUp() {
         super.setUp()
     }
 
 //    override func teardown() {
-//        logger = EventLogger(name: "Main")
+//        log = EventLog(name: "Main")
 //
 //        super.tearDown()
 //    }
 
     func testName() {
-        XCTAssertEqual(logger.name, "Main")
+        XCTAssertEqual(log.name, "Main")
     }
 
     func testEventTypes() {
@@ -32,23 +32,23 @@ class EventLoggerTests: XCTestCase {
 
         let expectaiton = expectationWithDescription("Adding events...")
 
-        logger = EventLogger(name: "Main")
+        log = EventLog(name: "Main")
         performAfter(1, completion: { () -> () in
-            self.logger.addEvent("A good thing happened")
+            self.log.addEvent("A good thing happened")
 
             self.performAfter(1, completion: { () -> () in
-                self.logger.addEvent("A bad thing happened", type: .Error)
+                self.log.addEvent("A bad thing happened", type: .Error)
 
-                XCTAssert(self.logger.events.first?.type == nil)
+                XCTAssert(self.log.events.first?.type == nil)
 
-                if let type = self.logger.events.last?.type {
-                    XCTAssertEqual(type, EventLogger.EventType.Error)
+                if let type = self.log.events.last?.type {
+                    XCTAssertEqual(type, EventLog.EventType.Error)
                 }
 
                 println("-------------")
-                println(self.logger.stringValue())
+                println(self.log.stringValue())
                 println("-------------")
-                println(self.logger.jsonValue())
+                println(self.log.jsonValue())
                 println("-------------")
                 expectaiton.fulfill()
             })
@@ -62,14 +62,14 @@ class EventLoggerTests: XCTestCase {
     func testFormatTime() {
         let minute: Double = 60
         let hour = minute * 60
-        XCTAssertEqual(EventLogger.formatTime(1), "1.00")
-        XCTAssertEqual(EventLogger.formatTime(1.01), "1.01")
-        XCTAssertEqual(EventLogger.formatTime(1.014), "1.01")
-        XCTAssertEqual(EventLogger.formatTime(1.015), "1.02")
-        XCTAssertEqual(EventLogger.formatTime(minute + 1.01), "1:01.01")
-        XCTAssertEqual(EventLogger.formatTime(hour + minute + 1), "1:01:01.00")
-        XCTAssertEqual(EventLogger.formatTime(24 * hour + minute + 1), "24:01:01.00")
-        XCTAssertEqual(EventLogger.formatTime(24 * hour), "24:00:00.00")
+        XCTAssertEqual(EventLog.formatTime(1), "1.00")
+        XCTAssertEqual(EventLog.formatTime(1.01), "1.01")
+        XCTAssertEqual(EventLog.formatTime(1.014), "1.01")
+        XCTAssertEqual(EventLog.formatTime(1.015), "1.02")
+        XCTAssertEqual(EventLog.formatTime(minute + 1.01), "1:01.01")
+        XCTAssertEqual(EventLog.formatTime(hour + minute + 1), "1:01:01.00")
+        XCTAssertEqual(EventLog.formatTime(24 * hour + minute + 1), "24:01:01.00")
+        XCTAssertEqual(EventLog.formatTime(24 * hour), "24:00:00.00")
     }
 
 //    func testPerformanceExample() {

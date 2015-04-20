@@ -1,13 +1,13 @@
 //
-//  EventLogger.swift
-//  EventLogger
+//  EventLog.swift
+//  EventLog
 //
 //  Created by Zef Houssney on 4/9/15.
 //
 
 import Foundation
 
-struct EventLogger {
+struct EventLog {
 
     enum EventType: String {
         case UserInteraction = "User Interaction"
@@ -29,7 +29,7 @@ struct EventLogger {
             return [
                 "message" : message,
                 "type" : type?.rawValue ?? "",
-                "time" : EventLogger.JSONTimeFormatter.stringFromDate(time),
+                "time" : EventLog.JSONTimeFormatter.stringFromDate(time),
             ]
         }
 
@@ -66,7 +66,7 @@ struct EventLogger {
 
     func stringValue() -> String {
         let strings = events.map { event -> String in
-            let time = EventLogger.formatTime(event.offsetSince(self.creationTime))
+            let time = EventLog.formatTime(event.offsetSince(self.creationTime))
             return "\(time): \(event.stringValue())"
         }
         return join("\n", strings)
@@ -75,7 +75,7 @@ struct EventLogger {
     func jsonValue() -> String {
         let eventList = events.map { event -> [String : String] in
             var dict = event.dictionaryValue()
-            dict["offset"] = EventLogger.formatTime(event.offsetSince(self.creationTime))
+            dict["offset"] = EventLog.formatTime(event.offsetSince(self.creationTime))
             return dict
         }
 
