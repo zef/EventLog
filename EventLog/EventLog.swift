@@ -10,7 +10,7 @@ import Foundation
 // would rather use a struct... but going class for @objc compatibility.
 // I thought of wrapping up the compatibility stuff in its own class
 // that references the struct, but think that's overkill for now...
-@objc class EventLog {
+@objc class EventLog: NSObject {
 
     @objc enum EventType: Int {
         case BlankType, UserInteraction, Checkpoint, Success, Error
@@ -65,14 +65,14 @@ import Foundation
     let creationTime = NSDate()
     var loggingEnabled = false
 
+    init(name: String) {
+        self.name = name
+    }
+
     static var JSONTimeFormatter: NSDateFormatter {
         let formatter = NSDateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
         return formatter
-    }
-
-    init (name: String) {
-        self.name = name
     }
 
     @objc func addEvent(message: String, type: EventType = .BlankType) {
