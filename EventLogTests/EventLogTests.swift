@@ -64,14 +64,14 @@ class EventLogTests: XCTestCase {
     func testFormatTime() {
         let minute: Double = 60
         let hour = minute * 60
-        XCTAssertEqual(EventLog.formatTime(1), "1.00")
-        XCTAssertEqual(EventLog.formatTime(1.01), "1.01")
-        XCTAssertEqual(EventLog.formatTime(1.014), "1.01")
-        XCTAssertEqual(EventLog.formatTime(1.015), "1.02")
-        XCTAssertEqual(EventLog.formatTime(minute + 1.01), "1:01.01")
-        XCTAssertEqual(EventLog.formatTime(hour + minute + 1), "1:01:01.00")
-        XCTAssertEqual(EventLog.formatTime(24 * hour + minute + 1), "24:01:01.00")
-        XCTAssertEqual(EventLog.formatTime(24 * hour), "24:00:00.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(1), "1.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(1.01), "1.01")
+        XCTAssertEqual(EventLog.formatTimeOffset(1.014), "1.01")
+        XCTAssertEqual(EventLog.formatTimeOffset(1.015), "1.02")
+        XCTAssertEqual(EventLog.formatTimeOffset(minute + 1.01), "1:01.01")
+        XCTAssertEqual(EventLog.formatTimeOffset(hour + minute + 1), "1:01:01.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour + minute + 1), "24:01:01.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour), "24:00:00.00")
     }
 
 //    func testPerformanceExample() {

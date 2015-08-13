@@ -88,7 +88,7 @@ import Foundation
     }
 
     func offsetFor(event: Event) -> String {
-        return EventLog.formatTime(event.offsetSince(self.creationTime))
+        return EventLog.formatTimeOffset(event.offsetSince(self.creationTime))
     }
 
     func stringValue() -> String {
@@ -110,7 +110,7 @@ import Foundation
         return NSString(data: data!, encoding: NSUTF8StringEncoding)! as String
     }
 
-    static func formatTime(totalSeconds: Double) -> String {
+    static func formatTimeOffset(totalSeconds: Double) -> String {
         let remainder = totalSeconds % 1
         let seconds = totalSeconds % 60
         let minutes = (totalSeconds / 60) % 60
