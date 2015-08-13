@@ -63,7 +63,7 @@ import Foundation
     var name: String
     var events = [Event]()
     let creationTime = NSDate()
-    var loggingEnabled = false
+    var consoleLoggingEnabled = false
 
     init(name: String) {
         self.name = name
@@ -82,7 +82,7 @@ import Foundation
     }
 
     func logEventAdded(event: Event) {
-        if loggingEnabled {
+        if consoleLoggingEnabled {
             println("\(name): \(offsetFor(event)): \(event.stringValue())")
         }
     }
