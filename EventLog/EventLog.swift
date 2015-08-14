@@ -10,9 +10,9 @@ import Foundation
 // would rather use a struct... but going class for @objc compatibility.
 // I thought of wrapping up the compatibility stuff in its own class
 // that references the struct, but think that's overkill for now...
-@objc class EventLog: NSObject {
+struct EventLog {
 
-    @objc enum EventType: Int {
+    enum EventType: Int {
         case BlankType, UserInteraction, Checkpoint, Success, Error
 
         func stringValue() -> String? {
@@ -102,7 +102,7 @@ import Foundation
         return formatter
     }
 
-    @objc func addEvent(message: String, type: EventType = .BlankType) {
+    mutating func addEvent(message: String, type: EventType = .BlankType) {
         let event = Event(message: message, type: type)
         events.append(event)
         logEventAdded(event)
@@ -151,7 +151,7 @@ import Foundation
         return jsonValue().writeToFile(savePath(), atomically: true, encoding: NSUTF8StringEncoding, error: nil)
     }
 
-    class func loadFromDisk(name: String) -> EventLog {
+    static func loadFromDisk(name: String) -> EventLog {
         if let json = NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding, error: nil) {
             if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: nil, error: nil) as? [String: AnyObject] {
                 var creationTime = NSDate()
@@ -178,7 +178,7 @@ import Foundation
         return EventLog.savePath(name)
     }
 
-    class func savePath(name: String) -> String {
+    static func savePath(name: String) -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory,.UserDomainMask,true).first as! String
         return "\(documentsPath)/EventLog-\(name).json"
     }

@@ -70,14 +70,14 @@ class EventLogTests: XCTestCase {
     }
 
     func testPersistance() {
-        let newLog = EventLog("SomeString")
+        var newLog = EventLog("SomeString")
         newLog.addEvent("Hello", type: EventLog.EventType.Checkpoint)
         let saved = newLog.saveToDisk()
 
         println("json value: ")
         println(newLog.jsonValue(pretty: true))
 
-        let loadedLog = EventLog.loadFromDisk("SomeString")
+        var loadedLog = EventLog.loadFromDisk("SomeString")
         XCTAssertEqual(loadedLog.name, "SomeString")
         XCTAssertEqualWithAccuracy(loadedLog.creationTime.timeIntervalSince1970, newLog.creationTime.timeIntervalSince1970, 0.001)
 
