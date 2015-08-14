@@ -9,12 +9,51 @@
 import UIKit
 import XCTest
 
-class EventLogTests: XCTestCase {
+enum TestMessage: String, EventLogMessage {
+    case One = "One"
+    case Two = "Two"
+    case Three = "Three"
+    case Four = "Four"
 
-    var log = EventLog("Main")
+    static var logName: String {
+        return "Test Log"
+    }
+    var logName: String {
+        return TestMessage.logName
+    }
+
+    var title: String {
+        return rawValue
+    }
+
+    var attributes: [String: String] {
+        return ["number": String(number)]
+    }
+
+    var number: Int {
+        switch self {
+        case .One:
+            return 1
+        case .Two:
+            return 2
+        case .Three:
+            return 3
+        case .Four:
+            return 4
+        }
+    }
+
+    var stringValue: String {
+        return "\(number): \(title)"
+    }
+
+}
+
+class EventLogTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        EventLog(TestMessage.logName).reset()
     }
 
 //    override func teardown() {
@@ -24,36 +63,27 @@ class EventLogTests: XCTestCase {
 //    }
 
     func testName() {
-        XCTAssertEqual(log.name, "Main")
+        XCTAssertEqual(EventLog(TestMessage.logName).name, "Test Log")
     }
 
-    func testEventTypes() {
-        var running = true
+    func testEvents() {
+        EventLog.add(TestMessage.One)
+        EventLog.add(TestMessage.Two)
+        EventLog.add(TestMessage.Three)
+        EventLog.add(TestMessage.Four)
 
-        let expectaiton = expectationWithDescription("Adding events...")
+        XCTAssertEqual(EventLog(TestMessage.logName).events.count, 4)
 
-        log = EventLog("Main")
-        performAfter(1, completion: { () -> () in
-            self.log.addEvent("A good thing happened")
-
-            self.performAfter(1, completion: { () -> () in
-                self.log.addEvent("A bad thing happened", type: .Error)
-
-                if let type = self.log.events.first?.type {
-                    XCTAssertEqual(type, EventLog.EventType.BlankType)
-                }
-
-                if let type = self.log.events.last?.type {
-                    XCTAssertEqual(type, EventLog.EventType.Error)
-                }
-
-                expectaiton.fulfill()
-            })
-        })
-
-        self.waitForExpectationsWithTimeout(2.5, handler: { (error) -> Void in
-
-        })
+        if let event = EventLog(TestMessage.logName).events.first {
+            XCTAssertEqual(event.title, "One")
+            XCTAssertEqual(event.attributes["number"]!, "1")
+        }
+        
+        if let event = EventLog(TestMessage.logName).events.last {
+            XCTAssertEqual(event.title, "Four")
+            XCTAssertEqual(event.attributes["number"]!, "4")
+        }
+        
     }
 
     func testFormatTime() {
@@ -69,32 +99,24 @@ class EventLogTests: XCTestCase {
         XCTAssertEqual(EventLog.formatTimeOffset(24 * hour), "24:00:00.00")
     }
 
-    func testPersistance() {
-        var newLog = EventLog("SomeString")
-        newLog.addEvent("Hello", type: EventLog.EventType.Checkpoint)
-        let saved = newLog.saveToDisk()
-
-        println("json value: ")
-        println(newLog.jsonValue(pretty: true))
-
-        var loadedLog = EventLog("SomeString")
-        XCTAssertEqual(loadedLog.name, "SomeString")
-        XCTAssertEqualWithAccuracy(loadedLog.creationTime.timeIntervalSince1970, newLog.creationTime.timeIntervalSince1970, 0.001)
-
-        XCTAssertEqual(loadedLog.events.count, newLog.events.count)
-        if let event =  loadedLog.events.first {
-            XCTAssertEqual(event.message, "Hello")
-        } else {
-            XCTFail("Event not found")
+    
+    func testPerformanceExample() {
+        self.measureBlock() {
+            let range = 1...1
+            for number in range {
+                EventLog.add(TestMessage.One)
+            }
+            for number in range {
+                EventLog.add(TestMessage.Two)
+            }
+            for number in range {
+                EventLog.add(TestMessage.Three)
+            }
+            for number in range {
+                EventLog.add(TestMessage.Four)
+            }
         }
     }
-
-//    func testPerformanceExample() {
-//        // This is an example of a performance test case.
-//        self.measureBlock() {
-//            // Put the code you want to measure the time of here.
-//        }
-//    }
 
     func performAfter(seconds: Int64, completion: () -> ()) {
         let time = seconds * Int64(NSEC_PER_SEC)
