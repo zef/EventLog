@@ -86,8 +86,12 @@ struct EventLog {
     var persisted = false
 
     init (_ name: String) {
-        self.name = name
-        self.creationTime = NSDate()
+        if let saved = EventLog.loadFromDisk(name) {
+            self = saved
+        } else {
+            self.name = name
+            self.creationTime = NSDate()
+        }
     }
 
     init (name: String, creationTime: NSDate, events: [Event]) {
@@ -151,7 +155,7 @@ struct EventLog {
         return jsonValue().writeToFile(savePath(), atomically: true, encoding: NSUTF8StringEncoding, error: nil)
     }
 
-    static func loadFromDisk(name: String) -> EventLog {
+    static func loadFromDisk(name: String) -> EventLog? {
         if let json = NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding, error: nil) {
             if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: nil, error: nil) as? [String: AnyObject] {
                 var creationTime = NSDate()
@@ -171,7 +175,7 @@ struct EventLog {
                 return EventLog(name: name, creationTime: creationTime, events: events)
             }
         }
-        return EventLog(name)
+        return nil
     }
 
     func savePath() -> String {
