@@ -162,6 +162,7 @@
 		8DE48DF81AD71A3E00413AC4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = "Made by Kiwi";
 				TargetAttributes = {
@@ -408,6 +409,7 @@
 				8DE48E191AD71A3E00413AC4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		8DE48E1A1AD71A3E00413AC4 /* Build configuration list for PBXNativeTarget "EventLogTests" */ = {
 			isa = XCConfigurationList;
@@ -416,6 +418,7 @@
 				8DE48E1C1AD71A3E00413AC4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

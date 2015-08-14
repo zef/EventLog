@@ -34,7 +34,13 @@ import Foundation
     struct Event {
         let message: String
         var type: EventType?
-        let time = NSDate()
+        let time: NSDate
+
+        init(message: String, type: EventType?, time: NSDate = NSDate()) {
+            self.message = message
+            self.type = type
+            self.time = time
+        }
 
         func offsetSince(startTime: NSDate) -> NSTimeInterval {
             return time.timeIntervalSinceDate(startTime)
@@ -58,15 +64,36 @@ import Foundation
 
             return "\(noticeType)\(message)"
         }
+
+        static func fromDictionary(dictionary: [String: String]) -> Event? {
+            var time: NSDate?
+            if let timeString = dictionary["time"] {
+                if let date = EventLog.JSONTimeFormatter.dateFromString(timeString) {
+                    time = date
+                }
+            }
+            if let message = dictionary["message"], time = time {
+                return Event(message: message, type: nil, time: time)
+            }
+            return nil
+        }
     }
 
     var name: String
     var events = [Event]()
-    let creationTime = NSDate()
+    let creationTime: NSDate
     var consoleLoggingEnabled = false
+    var persisted = false
 
-    init(name: String) {
+    init (_ name: String) {
         self.name = name
+        self.creationTime = NSDate()
+    }
+
+    init (name: String, creationTime: NSDate, events: [Event]) {
+        self.name = name
+        self.creationTime = creationTime
+        self.events = events
     }
 
     static var JSONTimeFormatter: NSDateFormatter {
@@ -99,15 +126,61 @@ import Foundation
         return join("\n", strings)
     }
 
-    func jsonValue() -> String {
+    func dictionaryValue() -> [String: AnyObject] {
         let eventList = events.map { event -> [String : String] in
             var dict = event.dictionaryValue()
             dict["offset"] = self.offsetFor(event)
             return dict
         }
 
-        let data = NSJSONSerialization.dataWithJSONObject(eventList, options: .PrettyPrinted, error: nil)
+        return [
+            "name": name,
+            "creationTime": EventLog.JSONTimeFormatter.stringFromDate(creationTime),
+            "exportTime": EventLog.JSONTimeFormatter.stringFromDate(NSDate()),
+            "events": eventList,
+        ]
+    }
+
+    func jsonValue(pretty: Bool = false) -> String {
+        let options = pretty ? NSJSONWritingOptions.PrettyPrinted : nil
+        let data = NSJSONSerialization.dataWithJSONObject(dictionaryValue(), options: options, error: nil)
         return NSString(data: data!, encoding: NSUTF8StringEncoding)! as String
+    }
+
+    func saveToDisk() -> Bool {
+        return jsonValue().writeToFile(savePath(), atomically: true, encoding: NSUTF8StringEncoding, error: nil)
+    }
+
+    class func loadFromDisk(name: String) -> EventLog {
+        if let json = NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding, error: nil) {
+            if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: nil, error: nil) as? [String: AnyObject] {
+                var creationTime = NSDate()
+                if let dateString = data["creationTime"] as? String {
+                    if let date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
+                        creationTime = date
+                    }
+                }
+                var events = [Event]()
+                if let eventData = data["events"] as? [[String: String]] {
+                    for data in eventData {
+                        if let event = Event.fromDictionary(data) {
+                            events.append(event)
+                        }
+                    }
+                }
+                return EventLog(name: name, creationTime: creationTime, events: events)
+            }
+        }
+        return EventLog(name)
+    }
+
+    func savePath() -> String {
+        return EventLog.savePath(name)
+    }
+
+    class func savePath(name: String) -> String {
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory,.UserDomainMask,true).first as! String
+        return "\(documentsPath)/EventLog-\(name).json"
     }
 
     static func formatTimeOffset(totalSeconds: Double) -> String {
@@ -134,4 +207,5 @@ import Foundation
 
         return string.substringFromIndex(indexOfDesiredChar!)
     }
+
 }

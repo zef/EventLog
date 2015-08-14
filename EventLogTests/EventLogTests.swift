@@ -11,7 +11,7 @@ import XCTest
 
 class EventLogTests: XCTestCase {
 
-    var log = EventLog(name: "Main")
+    var log = EventLog("Main")
 
     override func setUp() {
         super.setUp()
@@ -32,7 +32,7 @@ class EventLogTests: XCTestCase {
 
         let expectaiton = expectationWithDescription("Adding events...")
 
-        log = EventLog(name: "Main")
+        log = EventLog("Main")
         performAfter(1, completion: { () -> () in
             self.log.addEvent("A good thing happened")
 
@@ -47,11 +47,6 @@ class EventLogTests: XCTestCase {
                     XCTAssertEqual(type, EventLog.EventType.Error)
                 }
 
-                println("-------------")
-                println(self.log.stringValue())
-                println("-------------")
-                println(self.log.jsonValue())
-                println("-------------")
                 expectaiton.fulfill()
             })
         })
@@ -72,6 +67,26 @@ class EventLogTests: XCTestCase {
         XCTAssertEqual(EventLog.formatTimeOffset(hour + minute + 1), "1:01:01.00")
         XCTAssertEqual(EventLog.formatTimeOffset(24 * hour + minute + 1), "24:01:01.00")
         XCTAssertEqual(EventLog.formatTimeOffset(24 * hour), "24:00:00.00")
+    }
+
+    func testPersistance() {
+        let newLog = EventLog("SomeString")
+        newLog.addEvent("Hello", type: EventLog.EventType.Checkpoint)
+        let saved = newLog.saveToDisk()
+
+        println("json value: ")
+        println(newLog.jsonValue(pretty: true))
+
+        let loadedLog = EventLog.loadFromDisk("SomeString")
+        XCTAssertEqual(loadedLog.name, "SomeString")
+        XCTAssertEqualWithAccuracy(loadedLog.creationTime.timeIntervalSince1970, newLog.creationTime.timeIntervalSince1970, 0.001)
+
+        XCTAssertEqual(loadedLog.events.count, newLog.events.count)
+        if let event =  loadedLog.events.first {
+            XCTAssertEqual(event.message, "Hello")
+        } else {
+            XCTFail("Event not found")
+        }
     }
 
 //    func testPerformanceExample() {
