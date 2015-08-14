@@ -100,12 +100,6 @@ struct EventLog {
         self.events = events
     }
 
-    static var JSONTimeFormatter: NSDateFormatter {
-        let formatter = NSDateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
-        return formatter
-    }
-
     mutating func addEvent(message: String, type: EventType = .BlankType) {
         let event = Event(message: message, type: type)
         events.append(event)
@@ -122,7 +116,7 @@ struct EventLog {
         return EventLog.formatTimeOffset(event.offsetSince(self.creationTime))
     }
 
-    func stringValue() -> String {
+    var stringValue: String {
         let strings = events.map { event -> String in
             let time = self.offsetFor(event)
             return "\(time): \(event.stringValue())"
@@ -130,7 +124,7 @@ struct EventLog {
         return join("\n", strings)
     }
 
-    func dictionaryValue() -> [String: AnyObject] {
+    var dictionaryValue: [String: AnyObject] {
         let eventList = events.map { event -> [String : String] in
             var dict = event.dictionaryValue()
             dict["offset"] = self.offsetFor(event)
@@ -147,12 +141,12 @@ struct EventLog {
 
     func jsonValue(pretty: Bool = false) -> String {
         let options = pretty ? NSJSONWritingOptions.PrettyPrinted : nil
-        let data = NSJSONSerialization.dataWithJSONObject(dictionaryValue(), options: options, error: nil)
+        let data = NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options, error: nil)
         return NSString(data: data!, encoding: NSUTF8StringEncoding)! as String
     }
 
     func saveToDisk() -> Bool {
-        return jsonValue().writeToFile(savePath(), atomically: true, encoding: NSUTF8StringEncoding, error: nil)
+        return jsonValue().writeToFile(savePath, atomically: true, encoding: NSUTF8StringEncoding, error: nil)
     }
 
     static func loadFromDisk(name: String) -> EventLog? {
@@ -178,7 +172,7 @@ struct EventLog {
         return nil
     }
 
-    func savePath() -> String {
+    var savePath: String {
         return EventLog.savePath(name)
     }
 
@@ -212,4 +206,9 @@ struct EventLog {
         return string.substringFromIndex(indexOfDesiredChar!)
     }
 
+    static var JSONTimeFormatter: NSDateFormatter {
+        let formatter = NSDateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
+        return formatter
+    }
 }
