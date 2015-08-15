@@ -77,13 +77,27 @@ class EventLogTests: XCTestCase {
         if let event = EventLog(TestMessage.logName).events.first {
             XCTAssertEqual(event.title, "One")
             XCTAssertEqual(event.attributes["number"]!, "1")
+        } else {
+            XCTFail("No Event Found")
         }
         
         if let event = EventLog(TestMessage.logName).events.last {
             XCTAssertEqual(event.title, "Four")
             XCTAssertEqual(event.attributes["number"]!, "4")
+        } else {
+            XCTFail("No Event Found")
         }
         
+    }
+
+    func testArbitraryValues() {
+        EventLog.add(TestMessage.One, attributes: ["Some": "Thing"])
+
+        if let event = EventLog(TestMessage.logName).events.first {
+            XCTAssertEqual(event.attributes["Some"]!, "Thing")
+        } else {
+            XCTFail("No Event Found")
+        }
     }
 
     func testFormatTime() {
@@ -102,7 +116,7 @@ class EventLogTests: XCTestCase {
     
     func testPerformanceExample() {
         self.measureBlock() {
-            let range = 1...1
+            let range = 1...25
             for number in range {
                 EventLog.add(TestMessage.One)
             }

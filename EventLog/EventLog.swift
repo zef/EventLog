@@ -35,11 +35,19 @@ struct EventLog {
             static let StringValue = "stringValue"
         }
 
-        init(message: EventLogMessage) {
+        init(message: EventLogMessage, attributes: [String: String]? = nil) {
             self.title = message.title
-            self.attributes = message.attributes
             self.stringValue = message.stringValue
             self.time = NSDate()
+
+            var allAttributes = message.attributes
+            if let attributes = attributes {
+                for (key, value) in attributes {
+                    allAttributes[key] = value
+                }
+            }
+            self.attributes = allAttributes
+
         }
         init(title: String, attributes: [String: String], stringValue: String, time: NSDate) {
             self.title = title
@@ -103,9 +111,9 @@ struct EventLog {
         self.events = events
     }
 
-    static func add(message: EventLogMessage) {
+    static func add(message: EventLogMessage, attributes: [String: String]? = nil) {
         var log = EventLog(message.logName)
-        let message = Event(message: message)
+        let message = Event(message: message, attributes: attributes)
         log.addEvent(message)
         log.save()
     }
