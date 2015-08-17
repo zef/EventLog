@@ -9,8 +9,8 @@ import Foundation
 
 
 protocol EventLogMessage {
-// I want this but it seems to crash the Swift compiler when both static/instance are included
-//    static var logName: String { get }
+    static var eventLog: EventLog { get }
+    static var name: String { get }
     var logName: String { get }
 
     var title: String { get }

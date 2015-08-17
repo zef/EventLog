@@ -15,11 +15,14 @@ enum TestMessage: String, EventLogMessage {
     case Three = "Three"
     case Four = "Four"
 
-    static var logName: String {
+    static var eventLog: EventLog {
+        return EventLog(name)
+    }
+    static var name: String {
         return "Test Log"
     }
     var logName: String {
-        return TestMessage.logName
+        return TestMessage.name
     }
 
     var title: String {
@@ -53,7 +56,7 @@ class EventLogTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        EventLog(TestMessage.logName).reset()
+        TestMessage.eventLog.reset()
     }
 
 //    override func teardown() {
@@ -63,7 +66,7 @@ class EventLogTests: XCTestCase {
 //    }
 
     func testName() {
-        XCTAssertEqual(EventLog(TestMessage.logName).name, "Test Log")
+        XCTAssertEqual(TestMessage.eventLog.name, "Test Log")
     }
 
     func testEvents() {
@@ -72,16 +75,16 @@ class EventLogTests: XCTestCase {
         EventLog.add(TestMessage.Three)
         EventLog.add(TestMessage.Four)
 
-        XCTAssertEqual(EventLog(TestMessage.logName).events.count, 4)
+        XCTAssertEqual(TestMessage.eventLog.events.count, 4)
 
-        if let event = EventLog(TestMessage.logName).events.first {
+        if let event = TestMessage.eventLog.events.first {
             XCTAssertEqual(event.title, "One")
             XCTAssertEqual(event.attributes["number"]!, "1")
         } else {
             XCTFail("No Event Found")
         }
         
-        if let event = EventLog(TestMessage.logName).events.last {
+        if let event = TestMessage.eventLog.events.last {
             XCTAssertEqual(event.title, "Four")
             XCTAssertEqual(event.attributes["number"]!, "4")
         } else {
@@ -93,7 +96,7 @@ class EventLogTests: XCTestCase {
     func testArbitraryValues() {
         EventLog.add(TestMessage.One, attributes: ["Some": "Thing"])
 
-        if let event = EventLog(TestMessage.logName).events.first {
+        if let event = TestMessage.eventLog.events.first {
             XCTAssertEqual(event.attributes["Some"]!, "Thing")
         } else {
             XCTFail("No Event Found")
