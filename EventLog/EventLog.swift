@@ -18,9 +18,6 @@ protocol EventLogMessage {
     var stringValue: String { get }
 }
 
-// would rather use a struct... but going class for @objc compatibility.
-// I thought of wrapping up the compatibility stuff in its own class
-// that references the struct, but think that's overkill for now...
 struct EventLog {
 
     struct Event {
