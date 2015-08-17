@@ -109,8 +109,10 @@ class EventLogTests: XCTestCase {
         XCTAssertEqual(EventLog.formatTimeOffset(1.015), "1.02")
         XCTAssertEqual(EventLog.formatTimeOffset(minute + 1.01), "1:01.01")
         XCTAssertEqual(EventLog.formatTimeOffset(hour + minute + 1), "1:01:01.00")
-        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour + minute + 1), "24:01:01.00")
-        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour), "24:00:00.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour - 1), "23:59:59.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour + minute + 1), "1d+00:01:01.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(24 * hour), "1d+00:00:00.00")
+        XCTAssertEqual(EventLog.formatTimeOffset(48 * hour), "2d+00:00:00.00")
     }
 
     

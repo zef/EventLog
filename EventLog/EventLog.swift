@@ -213,16 +213,18 @@ struct EventLog {
         let remainder = totalSeconds % 1
         let seconds = totalSeconds % 60
         let minutes = (totalSeconds / 60) % 60
-        let hours = totalSeconds / (60 * 60)
+        let totalHours = totalSeconds / (60 * 60)
+        let hours = totalHours % 24
+        let days = totalHours / 24
         let subSeconds = (round(remainder * 100 + 0.001) / 100) * 100
-        let string = String(format: "%1d:%02d:%02d.%02d", Int(hours), Int(minutes), Int(seconds), Int(subSeconds))
+        let string = String(format: "%1dd+%02d:%02d:%02d.%02d", Int(days), Int(hours), Int(minutes), Int(seconds), Int(subSeconds))
 
         var startIndex = string.startIndex
         var indexOfDesiredChar: String.Index?
 
         while indexOfDesiredChar == nil {
             let char = string[startIndex]
-            if char == "0" || char == ":" {
+            if char == "0" || char == ":" || char == "d" || char == "+" {
                 startIndex = startIndex.successor()
             } else if char == "." {
                 indexOfDesiredChar = startIndex.predecessor()
