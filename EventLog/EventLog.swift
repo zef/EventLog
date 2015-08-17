@@ -88,8 +88,8 @@ struct EventLog {
     var name: String
     var events = [Event]()
     let creationTime: NSDate
-    var consoleLoggingEnabled = false
-    var persisted = false
+    var consoleLoggingEnabled = true
+    var persisted = true
 
     static private var storage = [String: EventLog]()
 
