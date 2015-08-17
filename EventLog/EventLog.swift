@@ -167,8 +167,12 @@ struct EventLog {
         saveToDisk()
     }
 
-    func saveToDisk() -> Bool {
-        return jsonValue().writeToFile(savePath, atomically: true, encoding: NSUTF8StringEncoding, error: nil)
+    func saveToDisk() {
+        if persisted {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), { () -> Void in
+                jsonValue().writeToFile(savePath, atomically: true, encoding: NSUTF8StringEncoding, error: nil)
+            })
+        }
     }
 
     static func loadFromDisk(name: String) -> EventLog? {
