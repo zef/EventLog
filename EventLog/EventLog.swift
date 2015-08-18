@@ -233,9 +233,9 @@ struct EventLog {
         return string.substringFromIndex(indexOfDesiredChar!)
     }
 
-    static var JSONTimeFormatter: NSDateFormatter {
+    static var JSONTimeFormatter: NSDateFormatter = {
         let formatter = NSDateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
         return formatter
-    }
+    }()
 }
