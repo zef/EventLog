@@ -46,11 +46,23 @@ struct EventLog {
             self.attributes = allAttributes
 
         }
-        init(title: String, attributes: [String: String], stringValue: String, time: NSDate) {
-            self.title = title
-            self.attributes = attributes
-            self.stringValue = stringValue
-            self.time = time
+
+        init?(dictionary: [String: String]) {
+            var attributes = dictionary
+            if let title = attributes.removeValueForKey(Keys.Title), timeString = attributes.removeValueForKey(Keys.Time), stringValue = attributes.removeValueForKey(Keys.StringValue) {
+
+                self.title = title
+                self.attributes = attributes
+                self.stringValue = stringValue
+                
+                if let date = EventLog.JSONTimeFormatter.dateFromString(timeString) {
+                    self.time = date
+                } else {
+                    self.time = NSDate()
+                }
+            }
+
+            return nil
         }
 
         func offsetSince(startTime: NSDate) -> NSTimeInterval {
@@ -65,21 +77,6 @@ struct EventLog {
             return dict
         }
 
-        static func fromDictionary(dictionary: [String: String]) -> Event? {
-            var attributes = dictionary
-
-            if let title = attributes.removeValueForKey(Keys.Title), timeString = attributes.removeValueForKey(Keys.Time), stringValue = attributes.removeValueForKey(Keys.StringValue) {
-                
-                var time = NSDate()
-                if let date = EventLog.JSONTimeFormatter.dateFromString(timeString) {
-                    time = date
-                }
-                
-                return Event(title: title, attributes: attributes, stringValue: stringValue, time: time)
-            }
-
-            return nil
-        }
     }
 
     var name: String
@@ -184,7 +181,7 @@ struct EventLog {
                 var events = [Event]()
                 if let eventData = data["events"] as? [[String: String]] {
                     for data in eventData {
-                        if let event = Event.fromDictionary(data) {
+                        if let event = Event(dictionary: data) {
                             events.append(event)
                         }
                     }
