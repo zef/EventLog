@@ -119,7 +119,7 @@ struct EventLog {
 
     private func didAddLogEvent(event: Event) {
         if consoleLoggingEnabled {
-            println("\(name): \(offsetFor(event)): \(event.stringValue)")
+            print("\(name): \(offsetFor(event)): \(event.stringValue)")
         }
     }
 
@@ -132,7 +132,7 @@ struct EventLog {
             let time = self.offsetFor(event)
             return "\(time): \(event.stringValue)"
         }
-        return join("\n", strings)
+        return "\n".join(strings)
     }
 
     var dictionaryValue: [String: AnyObject] {
@@ -152,7 +152,12 @@ struct EventLog {
 
     func jsonValue(pretty: Bool = false) -> String {
         let options = pretty ? NSJSONWritingOptions.PrettyPrinted : nil
-        let data = NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options, error: nil)
+        let data: NSData?
+        do {
+            data = try NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options)
+        } catch _ {
+            data = nil
+        }
         return NSString(data: data!, encoding: NSUTF8StringEncoding)! as String
     }
 
@@ -164,14 +169,15 @@ struct EventLog {
     func saveToDisk() {
         if persisted {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), { () -> Void in
-                jsonValue().writeToFile(savePath, atomically: true, encoding: NSUTF8StringEncoding, error: nil)
+                self.jsonValue().writeToFile(self.savePath, atomically: true, encoding: NSUTF8StringEncoding)
             })
         }
     }
 
     static func loadFromDisk(name: String) -> EventLog? {
-        if let json = NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding, error: nil) {
-            if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: nil, error: nil) as? [String: AnyObject] {
+        do {
+            let json = try NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding)
+            if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: []) as? [String: AnyObject] {
                 var creationTime = NSDate()
                 if let dateString = data["creationTime"] as? String {
                     if let date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
@@ -188,13 +194,17 @@ struct EventLog {
                 }
                 return EventLog(name: name, creationTime: creationTime, events: events)
             }
+        } catch _ {
         }
         return nil
     }
 
     func reset() {
         EventLog.storage.removeValueForKey(name)
-        NSFileManager.defaultManager().removeItemAtPath(savePath, error: nil)
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(savePath)
+        } catch _ {
+        }
     }
 
     var savePath: String {
