@@ -122,16 +122,16 @@ class EventLogTests: XCTestCase {
     func testPerformanceExample() {
         self.measureBlock() {
             let range = 1...25
-            for number in range {
+            for _ in range {
                 EventLog.add(TestMessage.One)
             }
-            for number in range {
+            for _ in range {
                 EventLog.add(TestMessage.Two)
             }
-            for number in range {
+            for _ in range {
                 EventLog.add(TestMessage.Three)
             }
-            for number in range {
+            for _ in range {
                 EventLog.add(TestMessage.Four)
             }
         }

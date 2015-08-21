@@ -151,14 +151,13 @@ struct EventLog {
     }
 
     func jsonValue(pretty: Bool = false) -> String {
-        let options = pretty ? NSJSONWritingOptions.PrettyPrinted : nil
-        let data: NSData?
+        let options: NSJSONWritingOptions = pretty ? NSJSONWritingOptions.PrettyPrinted : []
         do {
-            data = try NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options)
+            let data = try NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options)
+            return NSString(data: data, encoding: NSUTF8StringEncoding)! as String
         } catch _ {
-            data = nil
+            return ""
         }
-        return NSString(data: data!, encoding: NSUTF8StringEncoding)! as String
     }
 
     func save() {
@@ -169,7 +168,9 @@ struct EventLog {
     func saveToDisk() {
         if persisted {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), { () -> Void in
-                self.jsonValue().writeToFile(self.savePath, atomically: true, encoding: NSUTF8StringEncoding)
+                do {
+                    try self.jsonValue().writeToFile(self.savePath, atomically: true, encoding: NSUTF8StringEncoding)
+                } catch _ {}
             })
         }
     }
@@ -177,25 +178,26 @@ struct EventLog {
     static func loadFromDisk(name: String) -> EventLog? {
         do {
             let json = try NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding)
-            if let data = NSJSONSerialization.JSONObjectWithData(json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)!, options: []) as? [String: AnyObject] {
-                var creationTime = NSDate()
-                if let dateString = data["creationTime"] as? String {
-                    if let date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
-                        creationTime = date
-                    }
-                }
-                var events = [Event]()
-                if let eventData = data["events"] as? [[String: String]] {
-                    for data in eventData {
-                        if let event = Event(dictionary: data) {
-                            events.append(event)
+            if let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
+                if let data = try NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as? [String: AnyObject] {
+                    var creationTime = NSDate()
+                    if let dateString = data["creationTime"] as? String {
+                        if let date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
+                            creationTime = date
                         }
                     }
+                    var events = [Event]()
+                    if let eventData = data["events"] as? [[String: String]] {
+                        for data in eventData {
+                            if let event = Event(dictionary: data) {
+                                events.append(event)
+                            }
+                        }
+                    }
+                    return EventLog(name: name, creationTime: creationTime, events: events)
                 }
-                return EventLog(name: name, creationTime: creationTime, events: events)
             }
-        } catch _ {
-        }
+        } catch _ {}
         return nil
     }
 
@@ -212,7 +214,7 @@ struct EventLog {
     }
 
     static func savePath(name: String) -> String {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory,.UserDomainMask,true).first as! String
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory,.UserDomainMask,true).first!
         return "\(documentsPath)/EventLog-\(name).json"
     }
 
