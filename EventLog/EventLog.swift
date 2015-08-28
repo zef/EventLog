@@ -132,7 +132,7 @@ struct EventLog {
             let time = self.offsetFor(event)
             return "\(time): \(event.stringValue)"
         }
-        return "\n".join(strings)
+        return strings.joinWithSeparator("\n")
     }
 
     var dictionaryValue: [String: AnyObject] {
