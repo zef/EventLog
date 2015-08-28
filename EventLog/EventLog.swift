@@ -176,28 +176,27 @@ struct EventLog {
     }
 
     static func loadFromDisk(name: String) -> EventLog? {
-        do {
-            let json = try NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding)
-            if let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) {
-                if let data = try NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as? [String: AnyObject] {
-                    var creationTime = NSDate()
-                    if let dateString = data["creationTime"] as? String {
-                        if let date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
-                            creationTime = date
-                        }
-                    }
-                    var events = [Event]()
-                    if let eventData = data["events"] as? [[String: String]] {
-                        for data in eventData {
-                            if let event = Event(dictionary: data) {
-                                events.append(event)
-                            }
-                        }
-                    }
-                    return EventLog(name: name, creationTime: creationTime, events: events)
+        if let json = try? NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding) {
+            guard let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) else { return nil }
+
+            if let data = try? NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as? [String: AnyObject] {
+                guard let data = data else { return nil }
+
+                var creationTime = NSDate()
+                if let dateString = data["creationTime"] as? String, date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
+                    creationTime = date
                 }
+                var events = [Event]()
+                if let eventData = data["events"] as? [[String: String]] {
+                    for data in eventData {
+                        if let event = Event(dictionary: data) {
+                            events.append(event)
+                        }
+                    }
+                }
+                return EventLog(name: name, creationTime: creationTime, events: events)
             }
-        } catch _ {}
+        }
         return nil
     }
 
@@ -205,8 +204,7 @@ struct EventLog {
         EventLog.storage.removeValueForKey(name)
         do {
             try NSFileManager.defaultManager().removeItemAtPath(savePath)
-        } catch _ {
-        }
+        } catch { }
     }
 
     var savePath: String {
