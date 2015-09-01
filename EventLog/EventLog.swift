@@ -155,7 +155,7 @@ struct EventLog {
         do {
             let data = try NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options)
             return NSString(data: data, encoding: NSUTF8StringEncoding)! as String
-        } catch _ {
+        } catch {
             return ""
         }
     }
@@ -170,7 +170,7 @@ struct EventLog {
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), { () -> Void in
                 do {
                     try self.jsonValue().writeToFile(self.savePath, atomically: true, encoding: NSUTF8StringEncoding)
-                } catch _ {}
+                } catch {}
             })
         }
     }
