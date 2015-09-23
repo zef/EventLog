@@ -127,6 +127,10 @@ struct EventLog {
         return EventLog.formatTimeOffset(event.offsetSince(self.creationTime))
     }
 
+    func eventsWithMessage(message: EventLogMessage) -> [Event] {
+        return events.filter { $0.title == message.title }
+    }
+
     var stringValue: String {
         let strings = events.map { event -> String in
             let time = self.offsetFor(event)

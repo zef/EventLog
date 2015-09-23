@@ -102,6 +102,18 @@ class EventLogTests: XCTestCase {
             XCTFail("No Event Found")
         }
     }
+    func testFiltering() {
+        EventLog.add(TestMessage.One)
+        EventLog.add(TestMessage.Two)
+        EventLog.add(TestMessage.One)
+        EventLog.add(TestMessage.Three)
+        EventLog.add(TestMessage.One)
+        EventLog.add(TestMessage.Four)
+        EventLog.add(TestMessage.One)
+
+        let events = TestMessage.eventLog.eventsWithMessage(TestMessage.One)
+        XCTAssertEqual(events.count, 4)
+    }
 
     func testFormatTime() {
         let minute: Double = 60
