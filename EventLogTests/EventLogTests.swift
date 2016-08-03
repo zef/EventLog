@@ -14,6 +14,7 @@ enum TestMessage: String, EventLogMessage {
     case Two = "Two"
     case Three = "Three"
     case Four = "Four"
+    case Unaddable = "Unaddable"
 
     static var eventLog: EventLog {
         return EventLog(name)
@@ -43,11 +44,22 @@ enum TestMessage: String, EventLogMessage {
             return 3
         case .Four:
             return 4
+        case .Unaddable:
+            return 5
         }
     }
 
     var stringValue: String {
         return "\(number): \(title)"
+    }
+
+    func shouldAdd(log: EventLog) -> Bool {
+        switch self {
+        case .Unaddable:
+            return false
+        default:
+            return true
+        }
     }
 
 }
@@ -91,6 +103,16 @@ class EventLogTests: XCTestCase {
             XCTFail("No Event Found")
         }
         
+    }
+
+    func testCallbacks() {
+        EventLog.add(TestMessage.One)
+        EventLog.add(TestMessage.Two)
+        EventLog.add(TestMessage.Three)
+        EventLog.add(TestMessage.Four)
+        EventLog.add(TestMessage.Unaddable)
+
+        XCTAssertEqual(TestMessage.eventLog.events.count, 4)
     }
 
     func testArbitraryValues() {

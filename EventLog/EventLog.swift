@@ -16,6 +16,17 @@ protocol EventLogMessage {
     var title: String { get }
     var attributes: [String: String] { get }
     var stringValue: String { get }
+
+    func shouldAdd(log: EventLog) -> Bool
+    func afterAdd(log: EventLog)
+}
+
+extension EventLogMessage {
+    func shouldAdd(log: EventLog) -> Bool {
+        return true
+    }
+
+    func afterAdd(log: EventLog) { }
 }
 
 struct EventLog {
@@ -44,7 +55,6 @@ struct EventLog {
                 }
             }
             self.attributes = allAttributes
-
         }
 
         init?(dictionary: [String: String]) {
@@ -107,12 +117,15 @@ struct EventLog {
 
     static func add(message: EventLogMessage, attributes: [String: String]? = nil) {
         var log = EventLog(message.logName)
-        let message = Event(message: message, attributes: attributes)
-        log.addEvent(message)
-        log.save()
+        if message.shouldAdd(log) {
+            let event = Event(message: message, attributes: attributes)
+            log.addEvent(event)
+            log.save()
+            message.afterAdd(log)
+        }
     }
 
-    mutating func addEvent(event: Event) {
+    private mutating func addEvent(event: Event) {
         events.append(event)
         didAddLogEvent(event)
     }
