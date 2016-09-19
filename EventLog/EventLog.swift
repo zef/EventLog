@@ -35,7 +35,7 @@ struct EventLog {
         let title: String
         let attributes: [String: String]
         let stringValue: String
-        let time: NSDate
+        let time: Date
 
         struct Keys {
             static let Title = "title"
@@ -46,7 +46,7 @@ struct EventLog {
         init(message: EventLogMessage, attributes: [String: String]? = nil) {
             self.title = message.title
             self.stringValue = message.stringValue
-            self.time = NSDate()
+            self.time = Date()
 
             var allAttributes = message.attributes
             if let attributes = attributes {
@@ -59,30 +59,30 @@ struct EventLog {
 
         init?(dictionary: [String: String]) {
             var attributes = dictionary
-            if let title = attributes.removeValueForKey(Keys.Title), timeString = attributes.removeValueForKey(Keys.Time), stringValue = attributes.removeValueForKey(Keys.StringValue) {
+            if let title = attributes.removeValue(forKey: Keys.Title), let timeString = attributes.removeValue(forKey: Keys.Time), let stringValue = attributes.removeValue(forKey: Keys.StringValue) {
 
                 self.title = title
                 self.attributes = attributes
                 self.stringValue = stringValue
                 
-                if let date = EventLog.JSONTimeFormatter.dateFromString(timeString) {
+                if let date = EventLog.JSONTimeFormatter.date(from: timeString) {
                     self.time = date
                 } else {
-                    self.time = NSDate()
+                    self.time = Date()
                 }
             }
 
             return nil
         }
 
-        func offsetSince(startTime: NSDate) -> NSTimeInterval {
-            return time.timeIntervalSinceDate(startTime)
+        func offsetSince(time: Date) -> TimeInterval {
+            return time.timeIntervalSince(time)
         }
 
         func dictionaryValue() -> [String : String] {
             var dict = attributes
             dict[Keys.Title] = title
-            dict[Keys.Time] = EventLog.JSONTimeFormatter.stringFromDate(time)
+            dict[Keys.Time] = EventLog.JSONTimeFormatter.string(from: time)
             dict[Keys.StringValue] = stringValue
             return dict
         }
@@ -91,87 +91,87 @@ struct EventLog {
 
     var name: String
     var events = [Event]()
-    let creationTime: NSDate
+    let creationTime: Date
     var consoleLoggingEnabled = true
     var persisted = true
 
-    static private var storage = [String: EventLog]()
+    static fileprivate var storage = [String: EventLog]()
 
     init (_ name: String) {
         if let stored = EventLog.storage[name] {
             self = stored
-        } else if let saved = EventLog.loadFromDisk(name) {
+        } else if let saved = EventLog.loadFromDisk(named: name) {
             self = saved
         } else {
             self.name = name
-            self.creationTime = NSDate()
+            self.creationTime = Date()
             EventLog.storage[name] = self
         }
     }
 
-    init (name: String, creationTime: NSDate, events: [Event]) {
+    init (name: String, creationTime: Date, events: [Event]) {
         self.name = name
         self.creationTime = creationTime
         self.events = events
     }
 
-    static func add(message: EventLogMessage, attributes: [String: String]? = nil) {
+    static func add(_ message: EventLogMessage, attributes: [String: String]? = nil) {
         var log = EventLog(message.logName)
-        if message.shouldAdd(log) {
+        if message.shouldAdd(log: log) {
             let event = Event(message: message, attributes: attributes)
-            log.addEvent(event)
+            log.add(event: event)
             log.save()
-            message.afterAdd(log)
+            message.afterAdd(log: log)
         }
     }
 
-    private mutating func addEvent(event: Event) {
+    fileprivate mutating func add(event: Event) {
         events.append(event)
-        didAddLogEvent(event)
+        didAdd(event: event)
     }
 
-    private func didAddLogEvent(event: Event) {
+    fileprivate func didAdd(event: Event) {
         if consoleLoggingEnabled {
-            print("\(name): \(offsetFor(event)): \(event.stringValue)")
+            print("\(name): \(offsetFor(event: event)): \(event.stringValue)")
         }
     }
 
     func offsetFor(event: Event) -> String {
-        return EventLog.formatTimeOffset(event.offsetSince(self.creationTime))
+        return EventLog.formatTimeOffset(event.offsetSince(time: self.creationTime))
     }
 
-    func eventsWithMessage(message: EventLogMessage) -> [Event] {
+    func events(matching message: EventLogMessage) -> [Event] {
         return events.filter { $0.title == message.title }
     }
 
     var stringValue: String {
         let strings = events.map { event -> String in
-            let time = self.offsetFor(event)
+            let time = self.offsetFor(event: event)
             return "\(time): \(event.stringValue)"
         }
-        return strings.joinWithSeparator("\n")
+        return strings.joined(separator: "\n")
     }
 
     var dictionaryValue: [String: AnyObject] {
         let eventList = events.map { event -> [String : String] in
             var dict = event.dictionaryValue()
-            dict["offset"] = self.offsetFor(event)
+            dict["offset"] = self.offsetFor(event: event)
             return dict
         }
 
         return [
-            "name": name,
-            "creationTime": EventLog.JSONTimeFormatter.stringFromDate(creationTime),
-            "exportTime": EventLog.JSONTimeFormatter.stringFromDate(NSDate()),
-            "events": eventList,
+            "name": name as AnyObject,
+            "creationTime": EventLog.JSONTimeFormatter.string(from: creationTime) as AnyObject,
+            "exportTime": EventLog.JSONTimeFormatter.string(from: Date()) as AnyObject,
+            "events": eventList as AnyObject,
         ]
     }
 
-    func jsonValue(pretty: Bool = false) -> String {
-        let options: NSJSONWritingOptions = pretty ? NSJSONWritingOptions.PrettyPrinted : []
+    func jsonValue(_ pretty: Bool = false) -> String {
+        let options: JSONSerialization.WritingOptions = pretty ? JSONSerialization.WritingOptions.prettyPrinted : []
         do {
-            let data = try NSJSONSerialization.dataWithJSONObject(dictionaryValue, options: options)
-            return NSString(data: data, encoding: NSUTF8StringEncoding)! as String
+            let data = try JSONSerialization.data(withJSONObject: dictionaryValue, options: options)
+            return NSString(data: data, encoding: String.Encoding.utf8.rawValue)! as String
         } catch {
             return ""
         }
@@ -184,23 +184,23 @@ struct EventLog {
 
     func saveToDisk() {
         if persisted {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), { () -> Void in
+            DispatchQueue.global(qos: .background).async(execute: { () -> Void in
                 do {
-                    try self.jsonValue().writeToFile(self.savePath, atomically: true, encoding: NSUTF8StringEncoding)
+                    try self.jsonValue().write(toFile: self.savePath, atomically: true, encoding: String.Encoding.utf8)
                 } catch {}
             })
         }
     }
 
-    static func loadFromDisk(name: String) -> EventLog? {
-        if let json = try? NSString(contentsOfFile: savePath(name), encoding: NSUTF8StringEncoding) {
-            guard let jsonData = json.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false) else { return nil }
+    static func loadFromDisk(named name: String) -> EventLog? {
+        if let json = try? NSString(contentsOfFile: savePath(forName: name), encoding: String.Encoding.utf8.rawValue) {
+            guard let jsonData = json.data(using: String.Encoding.utf8.rawValue, allowLossyConversion: false) else { return nil }
 
-            if let data = try? NSJSONSerialization.JSONObjectWithData(jsonData, options: []) as? [String: AnyObject] {
+            if let data = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: AnyObject] {
                 guard let data = data else { return nil }
 
-                var creationTime = NSDate()
-                if let dateString = data["creationTime"] as? String, date = EventLog.JSONTimeFormatter.dateFromString(dateString) {
+                var creationTime = Date()
+                if let dateString = data["creationTime"] as? String, let date = EventLog.JSONTimeFormatter.date(from: dateString) {
                     creationTime = date
                 }
                 var events = [Event]()
@@ -218,27 +218,27 @@ struct EventLog {
     }
 
     func reset() {
-        EventLog.storage.removeValueForKey(name)
+        EventLog.storage.removeValue(forKey: name)
         do {
-            try NSFileManager.defaultManager().removeItemAtPath(savePath)
+            try FileManager.default.removeItem(atPath: savePath)
         } catch { }
     }
 
     var savePath: String {
-        return EventLog.savePath(name)
+        return EventLog.savePath(forName: name)
     }
 
-    static func savePath(name: String) -> String {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory,.UserDomainMask,true).first!
+    static func savePath(forName name: String) -> String {
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory,.userDomainMask,true).first!
         return "\(documentsPath)/EventLog-\(name).json"
     }
 
-    static func formatTimeOffset(totalSeconds: Double) -> String {
-        let remainder = totalSeconds % 1
-        let seconds = totalSeconds % 60
-        let minutes = (totalSeconds / 60) % 60
+    static func formatTimeOffset(_ totalSeconds: Double) -> String {
+        let remainder = totalSeconds.truncatingRemainder(dividingBy: 1)
+        let seconds = totalSeconds.truncatingRemainder(dividingBy: 60)
+        let minutes = (totalSeconds / 60).truncatingRemainder(dividingBy: 60)
         let totalHours = totalSeconds / (60 * 60)
-        let hours = totalHours % 24
+        let hours = totalHours.truncatingRemainder(dividingBy: 24)
         let days = totalHours / 24
         let subSeconds = (round(remainder * 100 + 0.001) / 100) * 100
         let string = String(format: "%1dd+%02d:%02d:%02d.%02d", Int(days), Int(hours), Int(minutes), Int(seconds), Int(subSeconds))
@@ -249,19 +249,19 @@ struct EventLog {
         while indexOfDesiredChar == nil {
             let char = string[startIndex]
             if char == "0" || char == ":" || char == "d" || char == "+" {
-                startIndex = startIndex.successor()
+                startIndex = string.index(after: startIndex)
             } else if char == "." {
-                indexOfDesiredChar = startIndex.predecessor()
+                indexOfDesiredChar = string.index(before: startIndex)
             } else {
                 indexOfDesiredChar = startIndex
             }
         }
 
-        return string.substringFromIndex(indexOfDesiredChar!)
+        return string.substring(from: indexOfDesiredChar!)
     }
 
-    static var JSONTimeFormatter: NSDateFormatter = {
-        let formatter = NSDateFormatter()
+    static var JSONTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
         return formatter
     }()

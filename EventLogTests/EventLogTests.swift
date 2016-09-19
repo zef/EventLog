@@ -133,7 +133,7 @@ class EventLogTests: XCTestCase {
         EventLog.add(TestMessage.Four)
         EventLog.add(TestMessage.One)
 
-        let events = TestMessage.eventLog.eventsWithMessage(TestMessage.One)
+        let events = TestMessage.eventLog.events(matching: TestMessage.One)
         XCTAssertEqual(events.count, 4)
     }
 
@@ -154,7 +154,7 @@ class EventLogTests: XCTestCase {
 
     
     func testPerformanceExample() {
-        self.measureBlock() {
+        self.measure() {
             let range = 1...25
             for _ in range {
                 EventLog.add(TestMessage.One)
@@ -169,10 +169,5 @@ class EventLogTests: XCTestCase {
                 EventLog.add(TestMessage.Four)
             }
         }
-    }
-
-    func performAfter(seconds: Int64, completion: () -> ()) {
-        let time = seconds * Int64(NSEC_PER_SEC)
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, time), dispatch_get_main_queue(), completion)
     }
 }
