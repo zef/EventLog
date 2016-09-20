@@ -9,9 +9,7 @@ import Foundation
 
 
 protocol EventLogMessage {
-    static var eventLog: EventLog { get }
-    static var name: String { get }
-    var logName: String { get }
+    static var logName: String { get }
 
     var title: String { get }
     var attributes: [String: String] { get }
@@ -22,6 +20,14 @@ protocol EventLogMessage {
 }
 
 extension EventLogMessage {
+    static var eventLog: EventLog {
+        return EventLog(logName)
+    }
+
+    var logName: String {
+        return type(of: self).logName
+    }
+
     func shouldAdd(log: EventLog) -> Bool {
         return true
     }
@@ -232,7 +238,7 @@ struct EventLog {
     }
 
     static fileprivate func savePath(forName name: String) -> String {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory,.userDomainMask,true).first!
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
         return "\(documentsPath)/EventLog-\(name).json"
     }
 

@@ -10,21 +10,14 @@ import UIKit
 import XCTest
 
 enum TestMessage: String, EventLogMessage {
+    static var logName = "Test Log"
+
     case One = "One"
     case Two = "Two"
     case Three = "Three"
     case Four = "Four"
     case Unaddable = "Unaddable"
 
-    static var eventLog: EventLog {
-        return EventLog(name)
-    }
-    static var name: String {
-        return "Test Log"
-    }
-    var logName: String {
-        return TestMessage.name
-    }
 
     var title: String {
         return rawValue
