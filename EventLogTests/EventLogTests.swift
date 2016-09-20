@@ -3,7 +3,6 @@
 //  EventLogTests
 //
 //  Created by Zef Houssney on 4/9/15.
-//  Copyright (c) 2015 Made by Kiwi. All rights reserved.
 //
 
 import UIKit
