@@ -75,8 +75,8 @@ struct EventLog {
             return nil
         }
 
-        func offsetSince(time: Date) -> TimeInterval {
-            return time.timeIntervalSince(time)
+        func offsetSince(time startTime: Date) -> TimeInterval {
+            return time.timeIntervalSince(startTime)
         }
 
         func dictionaryValue() -> [String : String] {
@@ -86,7 +86,6 @@ struct EventLog {
             dict[Keys.StringValue] = stringValue
             return dict
         }
-
     }
 
     var name: String
@@ -95,17 +94,17 @@ struct EventLog {
     var consoleLoggingEnabled = true
     var persisted = true
 
-    static fileprivate var storage = [String: EventLog]()
+    static fileprivate var memoryStorage = [String: EventLog]()
 
     init (_ name: String) {
-        if let stored = EventLog.storage[name] {
+        if let stored = EventLog.memoryStorage[name] {
             self = stored
         } else if let saved = EventLog.loadFromDisk(named: name) {
             self = saved
         } else {
             self.name = name
             self.creationTime = Date()
-            EventLog.storage[name] = self
+            EventLog.memoryStorage[name] = self
         }
     }
 
@@ -178,11 +177,15 @@ struct EventLog {
     }
 
     func save() {
-        EventLog.storage[name] = self
+        saveToMemory()
         saveToDisk()
     }
 
-    func saveToDisk() {
+    fileprivate func saveToMemory() {
+        EventLog.memoryStorage[name] = self
+    }
+
+    fileprivate func saveToDisk() {
         if persisted {
             DispatchQueue.global(qos: .background).async(execute: { () -> Void in
                 do {
@@ -192,7 +195,7 @@ struct EventLog {
         }
     }
 
-    static func loadFromDisk(named name: String) -> EventLog? {
+    static fileprivate func loadFromDisk(named name: String) -> EventLog? {
         if let json = try? NSString(contentsOfFile: savePath(forName: name), encoding: String.Encoding.utf8.rawValue) {
             guard let jsonData = json.data(using: String.Encoding.utf8.rawValue, allowLossyConversion: false) else { return nil }
 
@@ -218,17 +221,17 @@ struct EventLog {
     }
 
     func reset() {
-        EventLog.storage.removeValue(forKey: name)
+        EventLog.memoryStorage.removeValue(forKey: name)
         do {
             try FileManager.default.removeItem(atPath: savePath)
         } catch { }
     }
 
-    var savePath: String {
+    fileprivate var savePath: String {
         return EventLog.savePath(forName: name)
     }
 
-    static func savePath(forName name: String) -> String {
+    static fileprivate func savePath(forName name: String) -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory,.userDomainMask,true).first!
         return "\(documentsPath)/EventLog-\(name).json"
     }
