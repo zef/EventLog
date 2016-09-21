@@ -94,15 +94,15 @@ struct EventLog {
                 self.title = title
                 self.attributes = attributes
                 self.stringValue = stringValue
-                
+
                 if let date = EventLog.JSONTimeFormatter.date(from: timeString) {
                     self.time = date
                 } else {
                     self.time = Date()
                 }
+            } else {
+                return nil
             }
-
-            return nil
         }
 
         func offsetSince(time startTime: Date) -> TimeInterval {
