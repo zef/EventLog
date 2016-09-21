@@ -160,7 +160,7 @@ struct EventLog {
 
     fileprivate func didAdd(event: Event) {
         if consoleLoggingEnabled {
-            print("\(name): \(offsetFor(event: event)): \(event.stringValue)")
+            print("\(name) @ \(offsetFor(event: event)): \(event.stringValue)")
         }
     }
 
