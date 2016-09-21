@@ -10,6 +10,13 @@ import XCTest
 
 enum TestMessage: String, EventLogMessage {
     static var logName = "Test Log"
+    static var eventLog: EventLog {
+        return EventLog(logName)
+    }
+
+    var logName: String {
+        return TestMessage.logName
+    }
 
     case One = "One"
     case Two = "Two"

@@ -9,11 +9,11 @@ import Foundation
 
 
 protocol EventLogMessage {
+    // Default is "EventLog", override to separate into multiple instances of EventLog
+    var logName: String { get }
+
     // Required, but enums with a String value will use that value automatically
     var title: String { get }
-
-    // Default is "EventLog", override to separate into multiple types of logs
-    static var logName: String { get }
 
     // Defaults to empty, but you can implement to add your own attributes
     var attributes: [String: String] { get }
@@ -29,7 +29,7 @@ protocol EventLogMessage {
 }
 
 extension EventLogMessage {
-    static var logName: String {
+    var logName: String {
         return "EventLog"
     }
 
@@ -48,12 +48,8 @@ extension EventLogMessage {
     func afterAdd() { }
 
     // internal
-    static var eventLog: EventLog {
-        return EventLog(logName)
-    }
-
     var eventLog: EventLog {
-        return type(of: self).eventLog
+        return EventLog(logName)
     }
 }
 
