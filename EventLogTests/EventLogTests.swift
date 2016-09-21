@@ -45,7 +45,7 @@ enum TestMessage: String, EventLogMessage {
         return "\(number): \(title)"
     }
 
-    func shouldAdd(log: EventLog) -> Bool {
+    func shouldAdd() -> Bool {
         switch self {
         case .Unaddable:
             return false

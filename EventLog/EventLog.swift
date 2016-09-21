@@ -9,30 +9,58 @@ import Foundation
 
 
 protocol EventLogMessage {
+    // Required, but enums with a String value will use that value automatically
+    var title: String { get }
+
+    // Default is "EventLog", override to separate into multiple types of logs
     static var logName: String { get }
 
-    var title: String { get }
+    // Defaults to empty, but you can implement to add your own attributes
     var attributes: [String: String] { get }
+
+    // Defaults to title, but can be overridden to customize behavior when printed.
     var stringValue: String { get }
 
-    func shouldAdd(log: EventLog) -> Bool
-    func afterAdd(log: EventLog)
+    // Implement this to disable events from being added under certain circumstances.
+    func shouldAdd() -> Bool
+
+    // Implement this to execute code after an event is added to its EventLog
+    func afterAdd()
 }
 
 extension EventLogMessage {
+    static var logName: String {
+        return "EventLog"
+    }
+
+    var attributes: [String: String] {
+        return [:]
+    }
+
+    var stringValue: String {
+        return title
+    }
+
+    func shouldAdd() -> Bool {
+        return true
+    }
+
+    func afterAdd() { }
+
+    // internal
     static var eventLog: EventLog {
         return EventLog(logName)
     }
 
-    var logName: String {
-        return type(of: self).logName
+    var eventLog: EventLog {
+        return type(of: self).eventLog
     }
+}
 
-    func shouldAdd(log: EventLog) -> Bool {
-        return true
+extension EventLogMessage where Self: RawRepresentable, Self.RawValue == String {
+    var title: String {
+        return rawValue
     }
-
-    func afterAdd(log: EventLog) { }
 }
 
 struct EventLog {
@@ -121,12 +149,11 @@ struct EventLog {
     }
 
     static func add(_ message: EventLogMessage, attributes: [String: String]? = nil) {
-        var log = EventLog(message.logName)
-        if message.shouldAdd(log: log) {
-            let event = Event(message: message, attributes: attributes)
-            log.add(event: event)
+        if message.shouldAdd() {
+            var log = message.eventLog
+            log.add(event: Event(message: message, attributes: attributes))
             log.save()
-            message.afterAdd(log: log)
+            message.afterAdd()
         }
     }
 
