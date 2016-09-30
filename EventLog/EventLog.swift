@@ -7,6 +7,7 @@
 
 import Foundation
 
+typealias LoggableDictionary = [String: String]
 
 protocol EventLogMessage {
     // Default is "EventLog", override to separate into multiple instances of EventLog
@@ -16,7 +17,7 @@ protocol EventLogMessage {
     var title: String { get }
 
     // Defaults to empty, but you can implement to add your own attributes
-    var attributes: [String: String] { get }
+    var attributes: LoggableDictionary { get }
 
     // Defaults to title, but can be overridden to customize behavior when printed.
     var stringValue: String { get }
@@ -33,7 +34,7 @@ extension EventLogMessage {
         return "EventLog"
     }
 
-    var attributes: [String: String] {
+    var attributes: LoggableDictionary {
         return [:]
     }
 
@@ -63,7 +64,7 @@ struct EventLog {
 
     struct Event {
         let title: String
-        let attributes: [String: String]
+        let attributes: LoggableDictionary
         let stringValue: String
         let time: Date
 
@@ -73,7 +74,7 @@ struct EventLog {
             static let StringValue = "stringValue"
         }
 
-        init(message: EventLogMessage, attributes: [String: String]? = nil) {
+        init(message: EventLogMessage, attributes: LoggableDictionary? = nil) {
             self.title = message.title
             self.stringValue = message.stringValue
             self.time = Date()
@@ -87,7 +88,7 @@ struct EventLog {
             self.attributes = allAttributes
         }
 
-        init?(dictionary: [String: String]) {
+        init?(dictionary: LoggableDictionary) {
             var attributes = dictionary
             if let title = attributes.removeValue(forKey: Keys.Title), let timeString = attributes.removeValue(forKey: Keys.Time), let stringValue = attributes.removeValue(forKey: Keys.StringValue) {
 
@@ -109,7 +110,7 @@ struct EventLog {
             return time.timeIntervalSince(startTime)
         }
 
-        func dictionaryValue() -> [String: String] {
+        func dictionaryValue() -> LoggableDictionary {
             var dict = attributes
             dict[Keys.Title] = title
             dict[Keys.Time] = EventLog.JSONTimeFormatter.string(from: time)
@@ -144,7 +145,7 @@ struct EventLog {
         self.events = events
     }
 
-    static func add(_ message: EventLogMessage, attributes: [String: String]? = nil) {
+    static func add(_ message: EventLogMessage, attributes: LoggableDictionary? = nil) {
         if message.shouldAdd() {
             var log = message.eventLog
             log.add(event: Event(message: message, attributes: attributes))
@@ -181,7 +182,7 @@ struct EventLog {
     }
 
     var dictionaryValue: [String: Any] {
-        let eventList = events.map { event -> [String: String] in
+        let eventList = events.map { event -> LoggableDictionary in
             var dict = event.dictionaryValue()
             dict["offset"] = self.offsetFor(event: event)
             return dict
@@ -236,7 +237,7 @@ struct EventLog {
                     creationTime = date
                 }
                 var events = [Event]()
-                if let eventData = data["events"] as? [[String: String]] {
+                if let eventData = data["events"] as? [LoggableDictionary] {
                     for data in eventData {
                         if let event = Event(dictionary: data) {
                             events.append(event)

@@ -123,6 +123,7 @@ class EventLogTests: XCTestCase {
             XCTFail("No Event Found")
         }
     }
+
     func testFiltering() {
         EventLog.add(TestMessage.One)
         EventLog.add(TestMessage.Two)
