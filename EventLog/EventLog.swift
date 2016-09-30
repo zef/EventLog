@@ -109,7 +109,7 @@ struct EventLog {
             return time.timeIntervalSince(startTime)
         }
 
-        func dictionaryValue() -> [String : String] {
+        func dictionaryValue() -> [String: String] {
             var dict = attributes
             dict[Keys.Title] = title
             dict[Keys.Time] = EventLog.JSONTimeFormatter.string(from: time)
@@ -180,18 +180,18 @@ struct EventLog {
         return strings.joined(separator: "\n")
     }
 
-    var dictionaryValue: [String: AnyObject] {
-        let eventList = events.map { event -> [String : String] in
+    var dictionaryValue: [String: Any] {
+        let eventList = events.map { event -> [String: String] in
             var dict = event.dictionaryValue()
             dict["offset"] = self.offsetFor(event: event)
             return dict
         }
 
         return [
-            "name": name as AnyObject,
-            "creationTime": EventLog.JSONTimeFormatter.string(from: creationTime) as AnyObject,
-            "exportTime": EventLog.JSONTimeFormatter.string(from: Date()) as AnyObject,
-            "events": eventList as AnyObject,
+            "name": name,
+            "creationTime": EventLog.JSONTimeFormatter.string(from: creationTime),
+            "exportTime": EventLog.JSONTimeFormatter.string(from: Date()),
+            "events": eventList,
         ]
     }
 
@@ -228,7 +228,7 @@ struct EventLog {
         if let json = try? NSString(contentsOfFile: savePath(forName: name), encoding: String.Encoding.utf8.rawValue) {
             guard let jsonData = json.data(using: String.Encoding.utf8.rawValue, allowLossyConversion: false) else { return nil }
 
-            if let data = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: AnyObject] {
+            if let data = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
                 guard let data = data else { return nil }
 
                 var creationTime = Date()
