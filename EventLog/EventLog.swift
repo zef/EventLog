@@ -196,7 +196,7 @@ struct EventLog {
         ]
     }
 
-    func jsonValue(_ pretty: Bool = false) -> String {
+    func jsonValue(pretty: Bool = false) -> String {
         let options: JSONSerialization.WritingOptions = pretty ? JSONSerialization.WritingOptions.prettyPrinted : []
         do {
             let data = try JSONSerialization.data(withJSONObject: dictionaryValue, options: options)
