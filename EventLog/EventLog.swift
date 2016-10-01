@@ -7,7 +7,14 @@
 
 import Foundation
 
-typealias LoggableDictionary = [String: String]
+typealias LoggableDictionary = [String: LoggableValue]
+
+public protocol LoggableValue {
+    // this Any type should be something that can be converted by JSONSerialization
+    // if it is not, the value will stored using String(describing: yourValue)
+    // default conformances are defined at bottom of this file.
+    var loggableValue: Any { get }
+}
 
 protocol EventLogMessage {
     // Default is "EventLog", override to separate into multiple instances of EventLog
@@ -88,13 +95,15 @@ struct EventLog {
             self.attributes = allAttributes
         }
 
-        init?(dictionary: LoggableDictionary) {
+        fileprivate init?(dictionary: LoggableDictionary) {
             var attributes = dictionary
-            if let title = attributes.removeValue(forKey: Keys.Title), let timeString = attributes.removeValue(forKey: Keys.Time), let stringValue = attributes.removeValue(forKey: Keys.StringValue) {
+            if let title = attributes.removeValue(forKey: Keys.Title) as? String,
+               let stringValue = attributes.removeValue(forKey: Keys.StringValue) as? String,
+               let timeString = attributes.removeValue(forKey: Keys.Time) as? String {
 
                 self.title = title
-                self.attributes = attributes
                 self.stringValue = stringValue
+                self.attributes = attributes
 
                 if let date = EventLog.JSONTimeFormatter.date(from: timeString) {
                     self.time = date
@@ -110,8 +119,8 @@ struct EventLog {
             return time.timeIntervalSince(startTime)
         }
 
-        func dictionaryValue() -> LoggableDictionary {
-            var dict = attributes
+        func dictionaryValue() -> [String: Any] {
+            var dict = EventLog.validatedLoggableDictionary(dictionary: attributes)
             dict[Keys.Title] = title
             dict[Keys.Time] = EventLog.JSONTimeFormatter.string(from: time)
             dict[Keys.StringValue] = stringValue
@@ -182,7 +191,7 @@ struct EventLog {
     }
 
     var dictionaryValue: [String: Any] {
-        let eventList = events.map { event -> LoggableDictionary in
+        let eventList = events.map { event -> [String: Any] in
             var dict = event.dictionaryValue()
             dict["offset"] = self.offsetFor(event: event)
             return dict
@@ -200,8 +209,14 @@ struct EventLog {
         let options: JSONSerialization.WritingOptions = pretty ? JSONSerialization.WritingOptions.prettyPrinted : []
         do {
             let data = try JSONSerialization.data(withJSONObject: dictionaryValue, options: options)
-            return NSString(data: data, encoding: String.Encoding.utf8.rawValue)! as String
+            if let string = NSString(data: data, encoding: String.Encoding.utf8.rawValue) as? String {
+                return string
+            } else {
+                print("EventLog encountered error converting data to JSON string.")
+                return ""
+            }
         } catch {
+            print("EventLog encountered error converting dictionaryValue to Data.")
             return ""
         }
     }
@@ -209,6 +224,15 @@ struct EventLog {
     func save() {
         saveToMemory()
         saveToDisk()
+    }
+
+    func reset() {
+        EventLog.memoryStorage.removeValue(forKey: name)
+        do {
+            try FileManager.default.removeItem(atPath: savePath)
+        } catch {
+            print("EventLog encountered error removing saved file.")
+        }
     }
 
     fileprivate func saveToMemory() {
@@ -220,7 +244,9 @@ struct EventLog {
             DispatchQueue.global(qos: .background).async(execute: { () -> Void in
                 do {
                     try self.jsonValue().write(toFile: self.savePath, atomically: true, encoding: String.Encoding.utf8)
-                } catch {}
+                } catch {
+                    print("EventLog encountered error when writing JSON to disk.")
+                }
             })
         }
     }
@@ -250,13 +276,6 @@ struct EventLog {
         return nil
     }
 
-    func reset() {
-        EventLog.memoryStorage.removeValue(forKey: name)
-        do {
-            try FileManager.default.removeItem(atPath: savePath)
-        } catch { }
-    }
-
     fileprivate var savePath: String {
         return EventLog.savePath(forName: name)
     }
@@ -264,6 +283,20 @@ struct EventLog {
     static fileprivate func savePath(forName name: String) -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
         return "\(documentsPath)/EventLog-\(name).json"
+    }
+
+    static func validatedLoggableDictionary(dictionary: LoggableDictionary) -> [String: Any] {
+        var validated = dictionary as [String: Any]
+        for (key, value) in dictionary {
+            if let value = value as? [LoggableValue] {
+                validated[key] = value.map { $0.validatedLoggableValue }
+            } else if let value = value as? LoggableDictionary {
+                validated[key] = validatedLoggableDictionary(dictionary: value)
+            } else {
+                validated[key] = value.validatedLoggableValue
+            }
+        }
+        return validated
     }
 
     static func formatTimeOffset(_ totalSeconds: Double) -> String {
@@ -299,3 +332,48 @@ struct EventLog {
         return formatter
     }()
 }
+
+
+extension LoggableValue {
+    public var loggableValue: Any {
+        return self
+    }
+
+    public var validatedLoggableValue: Any {
+        let value = loggableValue
+        guard JSONSerialization.isValidJSONObject([value]) else {
+            return String(describing: value)
+        }
+        return value
+    }
+}
+
+extension String: LoggableValue {}
+extension Int: LoggableValue {}
+extension Float: LoggableValue {}
+extension Double: LoggableValue {}
+
+// these will throw out values that do not conform to LoggableValue
+// Swift does not (yet) allow Array/Dictionary extensions with constraints to conform to a protocol
+// when it does we can do something like this and simplify the function.
+// extension Array: LoggableValue where Element: LoggableValue  { }
+extension Array: LoggableValue {
+    public var loggableValue: Any {
+        return self.flatMap { $0 as? LoggableValue }
+    }
+}
+// note that this also throws out both:
+//   keys that are not String
+//   values that are not LoggableValue
+extension Dictionary: LoggableValue {
+    public var loggableValue: Any {
+        var loggableDict = LoggableDictionary()
+        for (key, value) in self {
+            if let key = key as? String, let value = value as? LoggableValue {
+                loggableDict[key] = value
+            }
+        }
+        return loggableDict
+    }
+}
+

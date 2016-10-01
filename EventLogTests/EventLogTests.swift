@@ -8,6 +8,13 @@
 import UIKit
 import XCTest
 
+// This is to test that we handle values not supported by JSONSerialization
+// and don't just crash. We do this by storing non-conforming values by passing them
+// through to String(describing: yourValue)
+// To log a date yourself without passing to the above method, you can return your own value
+// inside loggableValue yourself, or convert it to your own value before storing it
+extension Date: LoggableValue {}
+
 enum TestMessage: String, EventLogMessage {
     static var logName = "Test Log"
     static var eventLog: EventLog {
@@ -29,8 +36,8 @@ enum TestMessage: String, EventLogMessage {
         return rawValue
     }
 
-    var attributes: [String: String] {
-        return ["number": String(number)]
+    var attributes: LoggableDictionary {
+        return ["number": number]
     }
 
     var number: Int {
@@ -70,12 +77,6 @@ class EventLogTests: XCTestCase {
         TestMessage.eventLog.reset()
     }
 
-//    override func teardown() {
-//        log = EventLog(name: "Main")
-//
-//        super.tearDown()
-//    }
-
     func testName() {
         XCTAssertEqual(TestMessage.eventLog.name, "Test Log")
     }
@@ -90,14 +91,14 @@ class EventLogTests: XCTestCase {
 
         if let event = TestMessage.eventLog.events.first {
             XCTAssertEqual(event.title, "One")
-            XCTAssertEqual(event.attributes["number"]!, "1")
+            XCTAssertEqual(event.attributes["number"] as! Int, 1)
         } else {
             XCTFail("No Event Found")
         }
         
         if let event = TestMessage.eventLog.events.last {
             XCTAssertEqual(event.title, "Four")
-            XCTAssertEqual(event.attributes["number"]!, "4")
+            XCTAssertEqual(event.attributes["number"] as! Int, 4)
         } else {
             XCTFail("No Event Found")
         }
@@ -118,7 +119,56 @@ class EventLogTests: XCTestCase {
         EventLog.add(TestMessage.One, attributes: ["Some": "Thing"])
 
         if let event = TestMessage.eventLog.events.first {
-            XCTAssertEqual(event.attributes["Some"]!, "Thing")
+            XCTAssertEqual(event.attributes["Some"] as! String, "Thing")
+        } else {
+            XCTFail("No Event Found")
+        }
+    }
+
+    func testNestedValues() {
+        let logAttributes = ["Some": ["Nested": "Thing"]]
+        EventLog.add(TestMessage.One, attributes: logAttributes)
+
+        if let event = TestMessage.eventLog.events.first {
+            if let dict = event.attributes["Some"] as? LoggableDictionary,
+               let string = dict["Nested"] as? String {
+                XCTAssertEqual(string, "Thing")
+            } else {
+                XCTFail("Data not valid")
+            }
+        } else {
+            XCTFail("No Event Found")
+        }
+    }
+
+    // testing that we don't crash here, as much as we are the expected values
+    func testNonSerializableValues() {
+        let date = Date()
+        EventLog.add(TestMessage.One, attributes: [
+            "Date": date,
+            "DictDate": ["Date": date],
+            "ArrayDate": [date]
+        ])
+
+        let expectedString = String(describing: date)
+        if let eventDict = TestMessage.eventLog.events.first?.dictionaryValue() {
+            if let dateString = eventDict["Date"] as? String {
+                XCTAssertEqual(expectedString, dateString)
+            } else {
+                XCTFail("Date was not stored")
+            }
+
+            if let dict = eventDict["DictDate"] as? [String: String] {
+                XCTAssertEqual(expectedString, dict["Date"])
+            } else {
+                XCTFail("Date was not stored in nested dictionary")
+            }
+
+            if let array = eventDict["ArrayDate"] as? [String] {
+                XCTAssertEqual(expectedString, array.first)
+            } else {
+                XCTFail("Date was not stored in nested array")
+            }
         } else {
             XCTFail("No Event Found")
         }
