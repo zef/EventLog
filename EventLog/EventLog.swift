@@ -288,13 +288,7 @@ struct EventLog {
     static func validatedLoggableDictionary(dictionary: LoggableDictionary) -> [String: Any] {
         var validated = dictionary as [String: Any]
         for (key, value) in dictionary {
-            if let value = value as? [LoggableValue] {
-                validated[key] = value.map { $0.validatedLoggableValue }
-            } else if let value = value as? LoggableDictionary {
-                validated[key] = validatedLoggableDictionary(dictionary: value)
-            } else {
-                validated[key] = value.validatedLoggableValue
-            }
+            validated[key] = value.validatedLoggableValue
         }
         return validated
     }
@@ -359,7 +353,7 @@ extension Double: LoggableValue {}
 // extension Array: LoggableValue where Element: LoggableValue  { }
 extension Array: LoggableValue {
     public var loggableValue: Any {
-        return self.flatMap { $0 as? LoggableValue }
+        return self.flatMap { $0 as? LoggableValue }.map { $0.validatedLoggableValue }
     }
 }
 // note that this also throws out both:
@@ -367,10 +361,10 @@ extension Array: LoggableValue {
 //   values that are not LoggableValue
 extension Dictionary: LoggableValue {
     public var loggableValue: Any {
-        var loggableDict = LoggableDictionary()
+        var loggableDict = [String: Any]()
         for (key, value) in self {
             if let key = key as? String, let value = value as? LoggableValue {
-                loggableDict[key] = value
+                loggableDict[key] = value.validatedLoggableValue
             }
         }
         return loggableDict
