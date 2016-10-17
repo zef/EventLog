@@ -105,11 +105,7 @@ struct EventLog {
                 self.stringValue = stringValue
                 self.attributes = attributes
 
-                if let date = EventLog.JSONTimeFormatter.date(from: timeString) {
-                    self.time = date
-                } else {
-                    self.time = Date()
-                }
+                self.time = EventLog.ISO8601Formatter.date(from: timeString) ?? Date()
             } else {
                 return nil
             }
@@ -122,7 +118,7 @@ struct EventLog {
         func dictionaryValue() -> [String: Any] {
             var dict = EventLog.validatedLoggableDictionary(dictionary: attributes)
             dict[Keys.Title] = title
-            dict[Keys.Time] = EventLog.JSONTimeFormatter.string(from: time)
+            dict[Keys.Time] = EventLog.ISO8601Formatter.string(from: time)
             dict[Keys.StringValue] = stringValue
             return dict
         }
@@ -136,7 +132,7 @@ struct EventLog {
 
     static fileprivate var memoryStorage = [String: EventLog]()
 
-    init (_ name: String) {
+    init(_ name: String) {
         if let stored = EventLog.memoryStorage[name] {
             self = stored
         } else if let saved = EventLog.loadFromDisk(named: name) {
@@ -148,7 +144,7 @@ struct EventLog {
         }
     }
 
-    init (name: String, creationTime: Date, events: [Event]) {
+    init(name: String, creationTime: Date, events: [Event]) {
         self.name = name
         self.creationTime = creationTime
         self.events = events
@@ -199,8 +195,8 @@ struct EventLog {
 
         return [
             "name": name,
-            "creationTime": EventLog.JSONTimeFormatter.string(from: creationTime),
-            "exportTime": EventLog.JSONTimeFormatter.string(from: Date()),
+            "creationTime": EventLog.ISO8601Formatter.string(from: creationTime),
+            "exportTime": EventLog.ISO8601Formatter.string(from: Date()),
             "events": eventList,
         ]
     }
@@ -228,6 +224,7 @@ struct EventLog {
 
     func reset() {
         EventLog.memoryStorage.removeValue(forKey: name)
+//        creationTime = Date()
         do {
             try FileManager.default.removeItem(atPath: savePath)
         } catch {
@@ -259,8 +256,8 @@ struct EventLog {
                 guard let data = data else { return nil }
 
                 var creationTime = Date()
-                if let dateString = data["creationTime"] as? String, let date = EventLog.JSONTimeFormatter.date(from: dateString) {
-                    creationTime = date
+                if let dateString = data["creationTime"] as? String {
+                    creationTime = EventLog.ISO8601Formatter.date(from: dateString) ?? Date()
                 }
                 var events = [Event]()
                 if let eventData = data["events"] as? [LoggableDictionary] {
@@ -320,9 +317,12 @@ struct EventLog {
         return string.substring(from: indexOfDesiredChar!)
     }
 
-    static var JSONTimeFormatter: DateFormatter = {
+    static var ISO8601Formatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss:SSS"
+        formatter.calendar = Calendar(identifier: .iso8601)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"
         return formatter
     }()
 }
