@@ -224,7 +224,6 @@ struct EventLog {
 
     func reset() {
         EventLog.memoryStorage.removeValue(forKey: name)
-//        creationTime = Date()
         do {
             try FileManager.default.removeItem(atPath: savePath)
         } catch {
